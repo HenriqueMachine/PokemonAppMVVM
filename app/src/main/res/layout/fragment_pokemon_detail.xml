@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/ice"
-    tools:context=".features.pokemondetail.view.PokemonDetailActivity">
+    tools:context=".features.pokemondetail.view.PokemonDetailFragment">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/imageViewArrowBack"

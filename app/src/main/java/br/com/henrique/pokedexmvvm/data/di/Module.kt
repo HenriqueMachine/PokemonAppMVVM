@@ -8,6 +8,8 @@ import br.com.henrique.pokedexmvvm.BuildConfig
 import br.com.henrique.pokedexmvvm.data.client.PokedexAPI
 import br.com.henrique.pokedexmvvm.data.client.RetrofitClient
 import br.com.henrique.pokedexmvvm.data.db.database.PokemonDatabase
+import br.com.henrique.pokedexmvvm.features.pokemondetail.viewmodel.PokemonDetailViewModel
+import br.com.henrique.pokedexmvvm.features.pokemonlistfavorite.viewmodel.PokemonListFavoriteViewModel
 import org.koin.android.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -27,5 +29,7 @@ val appModules = module {
     }
     single { get<PokemonDatabase>().DAO() }
     factory<PokemonListService> { PokemonListRepository(api = get()) }
-    viewModel { PokemonListViewModel(repository = get(), get()) }
+    viewModel { PokemonListViewModel(repository = get()) }
+    viewModel { PokemonDetailViewModel(repository = get(), get()) }
+    viewModel { PokemonListFavoriteViewModel(get()) }
 }

@@ -16,4 +16,10 @@
         tools:listitem="@layout/pokemon_item_name"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
+    <ProgressBar
+        android:id="@+id/progressListPokemon"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

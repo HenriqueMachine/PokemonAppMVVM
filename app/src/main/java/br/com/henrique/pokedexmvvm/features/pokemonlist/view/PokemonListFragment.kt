@@ -1,29 +1,32 @@
 package br.com.henrique.pokedexmvvm.features.pokemonlist.view
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
+import androidx.core.os.bundleOf
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import br.com.henrique.pokedexmvvm.R
+import br.com.henrique.pokedexmvvm.application.SingleStateFragment
 import br.com.henrique.pokedexmvvm.data.model.ResultPokemonResponse
 import br.com.henrique.pokedexmvvm.extensions.onStateChanged
-import br.com.henrique.pokedexmvvm.features.pokemondetail.view.PokemonDetailActivity
 import br.com.henrique.pokedexmvvm.features.pokemonlist.adapter.PokemonAdapter
 import br.com.henrique.pokedexmvvm.features.pokemonlist.viewmodel.PokemonListViewModel
+import br.com.henrique.pokedexmvvm.features.pokemonlist.viewstate.PokemonListViewState
+import br.com.henrique.pokedexmvvm.features.pokemonlist.viewstate.PokemonListViewState.*
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_pokemon_list.*
 import org.koin.android.viewmodel.ext.android.viewModel
 
 
-class PokemonListFragment : Fragment() {
+class PokemonListFragment : SingleStateFragment<PokemonListViewState>() {
 
     companion object {
         const val IDENTIFIER_POKEMON_LIST_FRAGMENT = "PokemonListFragment"
     }
 
-    private val viewModel: PokemonListViewModel by viewModel()
+    override val viewModel: PokemonListViewModel by viewModel()
     private var adapterListPokemon: PokemonAdapter? = null
 
     override fun onCreateView(
@@ -32,34 +35,43 @@ class PokemonListFragment : Fragment() {
     ): View? {
 
         viewModel.getList()
-        setupObservers()
 
         return inflater.inflate(R.layout.fragment_pokemon_list, container, false)
     }
 
-    private fun setupObservers() {
-        viewModel.listPokemon.observe(requireActivity(), {
-            adapterListPokemon = PokemonAdapter(ArrayList(it))
-            adapterListPokemon?.onClickPokemon = { detail ->
-                openDetailActivity(detail)
-            }
-            recyclerViewListPokemons.also { recyclerView ->
-                recyclerView.adapter = adapterListPokemon
-                recyclerView.onStateChanged { recyclerView, state ->
-                    if (!recyclerView.canScrollVertically(1) && state == RecyclerView.SCROLL_STATE_IDLE) {
-                        viewModel.getNextPage()
+    override fun render(state: PokemonListViewState) {
+        when (state) {
+            is ShowPokemonList -> {
+                adapterListPokemon = PokemonAdapter(ArrayList(state.list))
+                adapterListPokemon?.onClickPokemon = { detail ->
+                    openDetailActivity(detail)
+                }
+                recyclerViewListPokemons.also { recyclerView ->
+                    recyclerView.adapter = adapterListPokemon
+                    recyclerView.onStateChanged { recyclerView2, state ->
+                        if (!recyclerView2.canScrollVertically(1) && state == RecyclerView.SCROLL_STATE_IDLE) {
+                            viewModel.getNextPage()
+                        }
                     }
                 }
             }
-        })
-        viewModel.listPokemonNextPage.observe(requireActivity(), {
-            adapterListPokemon?.addElements(it)
-        })
+            is LoadNextPage -> {
+                adapterListPokemon?.addElements(state.listNextPage)
+            }
+            is ShowLoading -> {
+                if (state.isLoading) progressListPokemon.visibility = View.VISIBLE
+                else progressListPokemon.visibility = View.GONE
+            }
+            is ShowError -> {
+                view?.let { Snackbar.make(it, "Erro ao carregar lista", Snackbar.LENGTH_SHORT).show() }
+            }
+        }
     }
 
     private fun openDetailActivity(data: ResultPokemonResponse) {
-        val intent = Intent(activity, PokemonDetailActivity::class.java)
-        intent.putExtra(IDENTIFIER_POKEMON_LIST_FRAGMENT, data)
-        startActivity(intent)
+        findNavController().navigate(
+            R.id.action_listPokemon_to_pokemonDetail,
+            bundleOf(Pair(IDENTIFIER_POKEMON_LIST_FRAGMENT, data))
+        )
     }
 }

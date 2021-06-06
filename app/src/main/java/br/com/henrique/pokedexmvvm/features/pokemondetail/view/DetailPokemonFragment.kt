@@ -1,35 +1,45 @@
 package br.com.henrique.pokedexmvvm.features.pokemondetail.view
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
+import android.view.ViewGroup
 import br.com.henrique.pokedexmvvm.R
+import br.com.henrique.pokedexmvvm.application.SingleStateFragment
 import br.com.henrique.pokedexmvvm.data.db.model.PokemonEntity
 import br.com.henrique.pokedexmvvm.data.model.PokemonDetailResponse
 import br.com.henrique.pokedexmvvm.data.model.ResultPokemonResponse
+import br.com.henrique.pokedexmvvm.features.pokemondetail.viewmodel.PokemonDetailViewModel
+import br.com.henrique.pokedexmvvm.features.pokemondetail.viewstate.PokemonDetailViewState
+import br.com.henrique.pokedexmvvm.features.pokemondetail.viewstate.PokemonDetailViewState.*
 import br.com.henrique.pokedexmvvm.features.pokemonlist.view.PokemonListFragment
-import br.com.henrique.pokedexmvvm.features.pokemonlist.viewmodel.PokemonListViewModel
 import br.com.henrique.pokedexmvvm.features.pokemonlistfavorite.PokemonListFavoriteFragment
 import com.bumptech.glide.Glide
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.activity_pokemon_detail.*
+import kotlinx.android.synthetic.main.fragment_pokemon_detail.*
 import org.koin.android.viewmodel.ext.android.viewModel
 
-class PokemonDetailActivity : AppCompatActivity() {
+class DetailPokemonFragment : SingleStateFragment<PokemonDetailViewState>() {
 
-    private val viewModel: PokemonListViewModel by viewModel()
+    override val viewModel: PokemonDetailViewModel by viewModel()
     private var actualPokemon: PokemonEntity? = null
     private var favorite = false
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_pokemon_detail)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_pokemon_detail, container, false)
+    }
 
-        val detailPokemon = intent.extras?.getSerializable(
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        val detailPokemon = arguments?.getSerializable(
             PokemonListFragment.IDENTIFIER_POKEMON_LIST_FRAGMENT
         ) as ResultPokemonResponse?
 
-        val favoriteDetailPokemon = intent.extras?.getSerializable(
+        val favoriteDetailPokemon = arguments?.getSerializable(
             PokemonListFavoriteFragment.IDENTIFIER_FAVORITE_POKEMON_LIST_FRAGMENT
         ) as PokemonEntity?
 
@@ -41,14 +51,12 @@ class PokemonDetailActivity : AppCompatActivity() {
     private fun setupDetailPokemon(detailPokemon: ResultPokemonResponse) {
         viewModel.getDetail(detailPokemon.url)
         viewModel.getPokemonsFromDatabase()
-        setupObservers()
         setupListeners()
     }
 
     private fun setupFavoriteDetailPokemon(detailPokemon: PokemonEntity) {
         getDetailFavoritePokemon(detailPokemon)
         setupListeners()
-        setupDetailObservers()
     }
 
     private fun getDetailFavoritePokemon(detailPokemon: PokemonEntity) {
@@ -62,7 +70,7 @@ class PokemonDetailActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         imageViewArrowBack.setOnClickListener {
-            onBackPressed()
+            activity?.onBackPressed()
         }
         imageViewFavoritePokemon.setOnClickListener {
             actualPokemon?.let { pokemon ->
@@ -72,28 +80,25 @@ class PokemonDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupObservers() {
-        viewModel.pokemonDetail.observe(this, {
-            setImagePokemon(it.sprites.front_default)
-            textViewPokemonIdDetail.text = "#${it.id}"
-            textViewPokemonNameDetail.text = it.name.toUpperCase()
-            textViewPokemonTypeDetail.text = it.types.first().type.name.toUpperCase()
-            viewModel.checkPokemonIsFavorite(it.id)
-            actualPokemon = it.mapToPokemonEntity()
-
-        })
-        viewModel.pokemonIsFavorite.observe(this, {
-            setFavoriteState(it)
-        })
-    }
-
-    private fun setupDetailObservers() {
-        viewModel.pokemonIsFavorite.observe(this, {
-            setFavoriteState(it)
-        })
-        viewModel.pokemonFavoriteList.observe(this, {
-            viewModel.checkPokemonIsFavorite(actualPokemon?.id ?: 0)
-        })
+    override fun render(state: PokemonDetailViewState) {
+        when (state) {
+            is ShowDetailPokemon -> {
+                state.detail.also {
+                    setImagePokemon(it.sprites.front_default)
+                    textViewPokemonIdDetail.text = "#${it.id}"
+                    textViewPokemonNameDetail.text = it.name.toUpperCase()
+                    textViewPokemonTypeDetail.text = it.types.first().type.name.toUpperCase()
+                    viewModel.checkPokemonIsFavorite(it.id)
+                    actualPokemon = it.mapToPokemonEntity()
+                }
+            }
+            is GetFavoritePokemons -> {
+                viewModel.checkPokemonIsFavorite(actualPokemon?.id ?: 0)
+            }
+            is CheckPokemonIsFavorite -> {
+                setFavoriteState(state.isFavorite)
+            }
+        }
     }
 
     private fun setFavoriteState(it: Boolean) {
@@ -138,9 +143,5 @@ class PokemonDetailActivity : AppCompatActivity() {
             type = this.types.first().type.name.toUpperCase(),
             photoUrl = this.sprites.front_default
         )
-    }
-
-    override fun onBackPressed() {
-        finish()
     }
 }

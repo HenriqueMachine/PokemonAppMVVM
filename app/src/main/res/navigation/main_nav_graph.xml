@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/availableLists">
+
+    <fragment
+        android:id="@+id/availableLists"
+        android:name="br.com.henrique.pokedexmvvm.features.listselector.ListSelectorFragment"
+        tools:layout="@layout/fragment_list_selector">
+        <action
+            android:id="@+id/action_availableLists_to_listPokemon"
+            app:destination="@id/listPokemon" />
+        <action
+            android:id="@+id/action_availableLists_to_listPokemonFavorite"
+            app:destination="@id/listPokemonFavorite" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/listPokemon"
+        android:name="br.com.henrique.pokedexmvvm.features.pokemonlist.view.PokemonListFragment"
+        tools:layout="@layout/fragment_pokemon_list">
+        <action
+            android:id="@+id/action_listPokemon_to_pokemonDetail"
+            app:destination="@id/pokemonDetail" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/listPokemonFavorite"
+        android:name="br.com.henrique.pokedexmvvm.features.pokemonlistfavorite.PokemonListFavoriteFragment"
+        tools:layout="@layout/fragment_pokemon_list_favorite">
+        <action
+            android:id="@+id/action_listPokemonFavorite_to_pokemonDetail"
+            app:destination="@id/pokemonDetail" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/pokemonDetail"
+        android:name="br.com.henrique.pokedexmvvm.features.pokemondetail.view.DetailPokemonFragment"
+        tools:layout="@layout/fragment_pokemon_detail" />
+
+</navigation>

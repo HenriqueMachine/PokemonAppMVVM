@@ -12,7 +12,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PokedexMVVM">
-        <activity android:name=".features.pokemondetail.view.PokemonDetailActivity"></activity>
         <activity android:name=".features.pokemonnavigation.view.PokemonNavigationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
